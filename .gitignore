@@ -39,4 +39,5 @@ Thumbs.db
 # Specific files #
 ######################
 node_modules/*
-*.json
+config/*.json
+stores/*.json
