@@ -194,8 +194,7 @@ function getStringTime(date) {
         if (hour > 11) {
             return hourString(parseInt(date.getHours(), 10)) + "PM";
         }
-    }
-    else {
+    } else {
         if (hour <= 11) {
             return `${hourString(parseInt(date.getHours(), 10))}:${minutes}AM`;
         }
@@ -250,8 +249,7 @@ function yesThenCollector(message) {
     collector.on("collect", (m) => {
         if (["y", "yes"].includes(m.content.toLowerCase())) {
             p.resolve();
-        }
-        else {
+        } else {
             message.channel.send("Okay, I won't do that");
             p.reject();
         }

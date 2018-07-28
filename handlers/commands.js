@@ -58,8 +58,7 @@ function clean(channel, numberMessages, recurse) {
                 helpers.log("clean error in guild " + channel.guild.id + err);
             });
             clean(channel, 100, true);
-        }
-        else {
+        } else {
             channel.bulkDelete(messages).catch((err) => {
                 helpers.log("clean error in guild " + channel.guild.id + err);
             });
@@ -94,8 +93,7 @@ function deleteMessages(message) {
     collector.on("collect", (m) => {
         if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
             clean(message.channel, numberMessages + 3, recurse);
-        }
-        else {
+        } else {
             message.channel.send("Okay, I won't do that.");
             clean(message.channel, 4, false);
         }
@@ -195,8 +193,7 @@ function generateCalendar(message, dayMap) {
         sendString += `\n **${helpers.dayString(dayMap[i].getDay())}** - ${helpers.monthString(dayMap[i].getMonth())} ${dayMap[i].getDate()} \n`;
         if (calendar[key].length === 0) {
             sendString += "``` ```";
-        }
-        else {
+        } else {
             sendString += "```";
             // Map events for each day
             for (let m = 0; m < calendar[key].length; m++) {
@@ -362,17 +359,14 @@ function displayOptions(message) {
             guildSettings.helpmenu = "1";
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
             message.channel.send("Okay I've turned the calendar help menu on");
-        }
-        else if (pieces[2] === "0") {
+        } else if (pieces[2] === "0") {
             guildSettings.helpmenu = "0";
             helpers.writeGuildSpecific(message.guild.id, guildSettings, "settings");
             message.channel.send("Okay I've turned the calendar help menu off");
-        }
-        else {
+        } else {
             message.channel.send ("Please only use 0 or 1 for the calendar help menu options, (off or on)");
         }
-    }
-    else {
+    } else {
         message.channel.send("I don't think thats a valid display option, sorry!");
     }
 }
@@ -414,8 +408,7 @@ function deleteEvent(message, calendarId, dayMap) {
     if (searchTime.indexOf("pm") !== -1) {
         if (searchTime === "12pm") {
             dTime = "12";
-        }
-        else {
+        } else {
             let temp = parseInt(searchTime.split("pm")[0], 10);
             dTime = String((temp + 12));
         }
@@ -452,8 +445,7 @@ function deleteEvent(message, calendarId, dayMap) {
                             res.delete(10000);
                         });
                     });
-                }
-                else {
+                } else {
                     message.channel.send("Okay, I won't do that").then((res) => {
                         res.delete(5000);
                     });
@@ -601,8 +593,7 @@ function run(message) {
     if (cmd === "delete" || helpers.mentioned(message, "delete")) {
         if (message.content.split(" ").length === 3) {
             deleteEvent(message, calendarID, dayMap);
-        }
-        else {
+        } else {
             message.channel.send("Hmm.. I can't process that request, delete using the format ``!delete <day> <start time>`` i.e ``!delete tuesday 8pm``")
                 .then((m) => {
                     m.delete(10000);

@@ -54,8 +54,7 @@ function logId(message) {
         }).catch((err) => {
             helpers.log(err);
         });
-    }
-    else {
+    } else {
         writeSetting(message, calendarId, "calendarID");
     }
 }
@@ -84,8 +83,7 @@ function logTz(message) {
         }).catch((err) => {
             helpers.log(err);
         });
-    }
-    else {
+    } else {
         writeSetting(message, tz, "timezone");
     }
 }

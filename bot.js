@@ -66,8 +66,7 @@ client.on("message", (message) => {
             helpers.log("error running init messages in guild: " + message.guild.id + ":", err);
             return message.channel.send("something went wrong");
         }
-    }
-    else {
+    } else {
         try {
             commands.run(message);
         }
