@@ -14,13 +14,16 @@ function getMinimumPermissions() {
 }
 
 function log() {
-    let message = `\`\`\`[${new Date().toUTCString()}] ${Array.from(arguments).join(" ")}\`\`\``;
-    console.log(message);
-    getLogChannel().send(message);
+    const logMessage = Array.from(arguments).join(" ");
+    const logString = `[${new Date().toUTCString()}] ${logMessage}`;
+    const tripleGrave = "```";
+    console.log(logString);
+    getLogChannel().send(tripleGrave + logString + tripleGrave);
 }
 
 function logError() {
-    log("[ERROR]", Array.from(arguments).join(" "));
+    const logMessage = Array.from(arguments).join(" ");
+    log("[ERROR]", logMessage);
 }
 
 function readFile(filePath) {
@@ -43,17 +46,17 @@ function fullname(user) {
     return `${user.username}#${user.discriminator}`;
 }
 
-function deleteFolderRecursive(path) {
-    if (fs.existsSync(path)) {
-        fs.readdirSync(path).forEach(function(file, index){
-            var curPath = path + "/" + file;
+function deleteFolderRecursive(folderPath) {
+    if (fs.existsSync(folderPath)) {
+        fs.readdirSync(folderPath).forEach(function(file){
+            var curPath = folderPath + "/" + file;
             if (fs.lstatSync(curPath).isDirectory()) {
                 deleteFolderRecursive(curPath);
             } else {
                 fs.unlinkSync(curPath);
             }
         });
-        fs.rmdirSync(path);
+        fs.rmdirSync(folderPath);
     }
 }
 
@@ -107,9 +110,7 @@ function prependZero(item) {
         converted = "0" + String(item);
         return converted;
     }
-    else {
-        return String(item);
-    }
+    return String(item);
 }
 
 function convertDate(dateToConvert, guildid) {
@@ -127,7 +128,6 @@ function convertDate(dateToConvert, guildid) {
     }
     let offset = parseFloat(hour + minutes);
     let utc = dateToConvert.getTime() + (dateToConvert.getTimezoneOffset() * 60000);
-    let utcdate = new Date(utc);
     let nd = new Date(utc + (3600000*offset));
     return nd;
 }
@@ -186,11 +186,9 @@ function getStringTime(date) {
 
 function sendMessageHandler(message, err) {
     if (err.message === "Missing Permissions") {
-        return message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
+        message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
     }
-    else {
-        return log(err);
-    }
+    log(err);
 }
 
 function checkPermissions(message) {

@@ -1,9 +1,6 @@
-const fs = require("fs");
 const path = require("path");
-const commands = require("./commands.js");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
-const defer = require("promise-defer");
 
 const HELP_MESSAGE = "```\
         Niles Usage - SETUP MODE\n\

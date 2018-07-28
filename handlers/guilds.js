@@ -1,10 +1,8 @@
 const fs = require("fs");
 const path = require("path");
-const settings = require("../settings.js");
 const guilddatabase = require("../stores/guilddatabase.json");
 const helpers = require("./helpers.js");
 const commands = require("./commands.js");
-const bot = require("../bot.js");
 
 exports.create = (guild) => {
     let guildPath = path.join(__dirname, "..", "stores", guild.id);

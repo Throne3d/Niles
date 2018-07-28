@@ -1,10 +1,10 @@
-const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
 const CalendarAPI = require("node-google-calendar");
 const columnify = require("columnify");
 const os = require("os");
 const moment = require("moment");
+const Discord = require("discord.js");
 require("moment-duration-format");
 let bot = require("../bot.js");
 let settings = require("../settings.js");
@@ -130,12 +130,12 @@ function getEvents(message, calendarID, dayMap) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let events = [];
-    let tz = guildSettings.timezone;
+    let tz = guildSettings.timezone; // FIXME: use
     let startDate = helpers.stringDate(dayMap[0], message.guild.id, "start");
     let endDate = helpers.stringDate(dayMap[6], message.guild.id, "end");
     let params = {
-        timeMin:startDate,
-        timeMax:endDate,
+        timeMin: startDate,
+        timeMax: endDate,
         singleEvents: true,
         orderBy: "startTime"
     };
@@ -171,24 +171,18 @@ function getEvents(message, calendarID, dayMap) {
         calendar.lastUpdate = d;
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     }).catch((err) => {
-        if (err.message.includes("notFound")) {
-            helpers.log("function getEvents error in guild: " + message.guild.id + " : 404 error can't find calendar");
-            message.channel.send(NO_CALENDAR_MESSAGE);
-            clearInterval(autoUpdater[message.guild.id]);
-            return;
-        }
-        //Catching periodic google rejections;
-        if (err.message.includes("Invalid Credentials")) {
-            return helpers.log("function getEvents error in guild: " + message.guild.id + " : 401 invalid credentials");
-        }
-        else {
-            helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err);
-            clearInterval(autoUpdater[message.guild.id]);
-        }
+        helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err);
+
+        // Catching periodic google rejections:
+        if (err.message.includes("Invalid Credentials")) return;
+
+        if (err.message.includes("notFound")) message.channel.send(NO_CALENDAR_MESSAGE);
+
+        clearInterval(autoUpdater[message.guild.id]);
     });
 }
 
-function generateCalendar (message, dayMap) {
+function generateCalendar(message, dayMap) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
@@ -244,46 +238,39 @@ function generateCalendar (message, dayMap) {
 function postCalendar(message, dayMap) {
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
 
     if (calendar.calendarMessageId) {
-        message.channel.fetchMessage(calendar.calendarMessageId).then((message) => {
-            message.delete();
+        message.channel.fetchMessage(calendar.calendarMessageId).then((oldCalendar) => {
+            oldCalendar.delete();
         }).catch((err) => {
-            if (err.code === 10008) {
+            if (err.code === Discord.Constants.APIErrors.UNKNOWN_MESSAGE) {
                 calendar.calendarMessageId = "";
                 helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-                return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
             }
-            else {
-                return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ":" + err);
-            }
+            return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ": " + err);
         });
     }
     generateCalendar(message, dayMap).then((embed) => {
-        message.channel.send({ embed }).then((sent) => {
+        return message.channel.send({ embed }).then((sent) => {
             calendar.calendarMessageId = sent.id;
-            sent.pin();
+            return sent.pin();
         });
-    }).then((confirm) => {
-        setTimeout(function func() {
+    }).then(_ => {
+        setTimeout(function() {
             helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-            setTimeout(function func() { startUpdateTimer(message); }, 2000);
+            setTimeout(function() { startUpdateTimer(message); }, 2000);
         }, 2000);
     }).catch((err) => {
-        helpers.log("funtion postCalendar error in guild: " + message.guild.id + ": " + err);
+        helpers.log("function postCalendar error in guild: " + message.guild.id + ": " + err);
     });
 }
 
 function updateCalendar(message, dayMap, human) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
-    let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
     let calendar = helpers.readFile(calendarPath);
     if (calendar.calendarMessageId === "") {
         clearInterval(autoUpdater[message.guild.id]);
-        message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.").then((m) => {});
+        message.channel.send("I can't find the last calendar I posted. Use `!display` and I'll post a new one.");
         return;
     }
     let messageId = calendar.calendarMessageId;
@@ -295,18 +282,16 @@ function updateCalendar(message, dayMap, human) {
             }
         });
     }).catch((err) => {
-        if (err.code === 1008) {
+        if (err.code === Discord.Constants.APIErrors.UNKNOWN_MESSAGE) {
             helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
             calendar.calendarMessageId = "";
             helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
             return;
         }
-        else {
-            helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
-            calendar.calendarMessageId = "";
-            helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-            return;
-        }
+
+        helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
+        calendar.calendarMessageId = "";
+        helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     });
 }
 
@@ -317,21 +302,19 @@ function startUpdateTimer(message) {
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarID = guildSettings.calendarID;
-    let calendarPath = path.join(__dirname, "..", "stores", message.guild.id, "calendar.json");
-    let calendar = helpers.readFile(calendarPath);
     let dayMap = createDayMap(message);
     //Pull updates on set interval
     if (!autoUpdater[message.guild.id]) {
         timerCount[message.guild.id] += 1;
         helpers.log("Starting update timer in guild: " + message.guild.id);
-        return autoUpdater[message.guild.id] = setInterval(function func() { calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]); }, settings.secrets.calendar_update_interval);
+        return autoUpdater[message.guild.id] = setInterval(function() { calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]); }, settings.secrets.calendar_update_interval);
 
     }
     if (autoUpdater[message.guild.id]._idleTimeout !== settings.secrets.calendar_update_interval) {
         try {
             timerCount[message.guild.id] += 1;
             helpers.log("Starting update timer in guild: " + message.guild.id);
-            return autoUpdater[message.guild.id] = setInterval(function func() { calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]); }, settings.secrets.calendar_update_interval);
+            return autoUpdater[message.guild.id] = setInterval(function() { calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]); }, settings.secrets.calendar_update_interval);
         } catch (err) {
             helpers.log("error starting the autoupdater" + err);
             clearInterval(autoUpdater[message.guild.id]);
@@ -359,7 +342,6 @@ function quickAddEvent(message, calendarId) {
         text
     };
     cal.Events.quickAdd(calendarId, params).then((resp) => {
-        let json = resp;
         message.channel.send("Event `" + resp.summary + "` on `" +  resp.start.dateTime + "` has been created").then((m) => {
             m.delete(5000);
         });
@@ -399,9 +381,9 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
     let params = {
         sendNotifications: true
     };
-    return cal.Events.delete(calendarId, eventId, params).then((resp) => {
+    return cal.Events.delete(calendarId, eventId, params).then(() => {
         getEvents(message, calendarId, dayMap);
-        setTimeout(function func() {
+        setTimeout(function() {
             updateCalendar(message, dayMap, true);
         }, 2000);
     }).catch((err) => {
@@ -414,12 +396,11 @@ function deleteEvent(message, calendarId, dayMap) {
     let calendar = helpers.readFile(calendarPath);
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    let deleteMessages = [];
-    deleteMessages.push(message.id);
+    let toDeleteMessages = [];
+    toDeleteMessages.push(message.id);
     let dayDate;
     let dTime;
     let keyID;
-    let gcalID;
     let pieces = message.content.split(" ");
     let searchDay = helpers.firstUpper(pieces[1].toLowerCase());
     let searchTime = pieces[2].toLowerCase();
@@ -464,9 +445,9 @@ function deleteEvent(message, calendarId, dayMap) {
                 });
             const collector = message.channel.createMessageCollector((m) => message.author.id === m.author.id, { time: 10000 });
             collector.on("collect", (m) => {
-                deleteMessages.push(m.id);
+                toDeleteMessages.push(m.id);
                 if (m.content.toLowerCase() === "y" || m.content.toLowerCase() === "yes") {
-                    deleteEventById(calendar[key][j].id, calendarId, dayMap, message).then((del) => {
+                    deleteEventById(calendar[key][j].id, calendarId, dayMap, message).then(() => {
                         message.channel.send(`Event **${calendar[key][j].summary}** deleted`).then((res) => {
                             res.delete(10000);
                         });
@@ -477,8 +458,8 @@ function deleteEvent(message, calendarId, dayMap) {
                         res.delete(5000);
                     });
                 }
-                for (let k = 0; k < deleteMessages.length; k++) {
-                    message.channel.fetchMessage(deleteMessages[k]).then((m) => {
+                for (let k = 0; k < toDeleteMessages.length; k++) {
+                    message.channel.fetchMessage(toDeleteMessages[k]).then((m) => {
                         m.delete(5000);
                     });
                 }
@@ -499,13 +480,13 @@ function deleteEvent(message, calendarId, dayMap) {
     });
 } // needs catches.
 
-function calendarUpdater(message, calendarId, dayMap, timerCount) {
+function calendarUpdater(message, calendarId, dayMap, _timerCount) {
     try {
         dayMap = createDayMap(message);
-        setTimeout(function func() {
+        setTimeout(function() {
             getEvents(message, calendarId, dayMap);
         }, 2000);
-        setTimeout(function func() {
+        setTimeout(function() {
             updateCalendar(message, dayMap, false);
         }, 4000);
     } catch (err) {
@@ -538,7 +519,7 @@ exports.deleteUpdater = function(guildid) {
 };
 
 function delayGetEvents(message, calendarId, dayMap) {
-    setTimeout(function func() {
+    setTimeout(function() {
         getEvents(message, calendarId, dayMap);
     }, 1000);
 }
@@ -588,7 +569,7 @@ function run(message) {
     }
     if (cmd === "display" || helpers.mentioned(message, "display")) {
         delayGetEvents(message, calendarID, dayMap);
-        setTimeout(function func() {
+        setTimeout(function() {
             postCalendar(message, dayMap);
         }, 2000);
         message.delete(5000);
@@ -600,16 +581,16 @@ function run(message) {
             return;
         }
         delayGetEvents(message, calendarID, dayMap);
-        setTimeout(function func() {
+        setTimeout(function() {
             updateCalendar(message, dayMap, true);
         }, 2000);
         message.delete(5000);
     }
     if (["create", "scrim"].includes(cmd) || helpers.mentioned(message, ["create", "scrim"])) {
-        quickAddEvent(message, calendarID).then((resp) => {
+        quickAddEvent(message, calendarID).then(() => {
             getEvents(message, calendarID, dayMap);
-        }).then((resp) => {
-            setTimeout(function func() {
+        }).then(() => {
+            setTimeout(function() {
                 updateCalendar(message, dayMap, true);
             }, 2000);
         }).catch((err) => {
