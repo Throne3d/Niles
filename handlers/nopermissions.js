@@ -27,8 +27,8 @@ function run(message) {
             message.author.send(HELP_MESSAGE);
             helpers.checkPermissionsManual(message, "help");
             return helpers.log("help & permissions DM sent");
-          }
-      return helpers.log("no permission to send messages.");
+        }
+        return helpers.log("no permission to send messages.");
     }
     //remove later^^
     let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
@@ -42,4 +42,4 @@ function run(message) {
     }
 }
 
-module.exports = {run};
+module.exports = { run };

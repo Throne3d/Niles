@@ -1,7 +1,7 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const fs = require("fs");
-const usersPath = path.join(__dirname, "..","stores", "users.json");
+const usersPath = path.join(__dirname, "..", "stores", "users.json");
 const users = require("../stores/users.json");
 const HELP_MESSAGE = "```\
         Niles Usage\n\
@@ -26,18 +26,18 @@ function permissionDMChanger(message) {
     if (!pieces[1]) {
         return message.author.send("You didn't enter an argument. Use `!permissions 0`");
     }
-    if (pieces[1] && !Number.isInteger(parseInt(pieces[1],10))) {
+    if (pieces[1] && !Number.isInteger(parseInt(pieces[1], 10))) {
         return message.author.send("You can only use a number i.e. `!permissions 0`");
     }
     if (["0", "1"].includes(pieces[1])) {
         let settings = {
-            "permissionChecker": pieces[1]
+            permissionChecker: pieces[1]
         };
         users[message.author.id] = settings;
-        fs.writeFile(usersPath, JSON.stringify(users, "","\t"), (err) => {
-          if(err) {
-              return helpers.log("error writing the users database" + err);
-          }
+        fs.writeFile(usersPath, JSON.stringify(users, "", "\t"), (err) => {
+            if (err) {
+                return helpers.log("error writing the users database" + err);
+            }
         });
         return message.author.send("okay I've changed that setting.");
     }
@@ -52,14 +52,14 @@ function run (message) {
     let cmdFns = {
         permissions,
         help
-      };
-      let cmdFn = cmdFns[cmd];
-      if (cmdFn) {
+    };
+    let cmdFn = cmdFns[cmd];
+    if (cmdFn) {
         cmdFn();
-      }
-      if (message.content === "help") {
-          message.author.send(HELP_MESSAGE);
-      }
+    }
+    if (message.content === "help") {
+        message.author.send(HELP_MESSAGE);
+    }
 }
 
-module.exports = {run};
+module.exports = { run };

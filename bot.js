@@ -46,34 +46,34 @@ client.on("message", (message) => {
         return;
     }
     helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
-    if(!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id]["permissionChecker"] === "1" || !users[message.author.id]["permissionChecker"])) {
+    if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
         try {
             restricted.run(message);
-          } catch (err) {
-              helpers.log("error in restricted permissions " + err);
-          }
+        } catch (err) {
+            helpers.log("error in restricted permissions " + err);
+        }
         return;
     } else if (!helpers.checkPermissions(message)) {
         return;
     }
     if (!guildSettings.calendarID || !guildSettings.timezone) {
         try {
-          init.run(message);
+            init.run(message);
         }
         catch (err) {
-          helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
-          return message.channel.send("something went wrong");
+            helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
+            return message.channel.send("something went wrong");
         }
-      }
-      else {
-          try {
+    }
+    else {
+        try {
             commands.run(message);
-          }
-          catch (err) {
+        }
+        catch (err) {
             helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
             return message.channel.send("something went wrong");
-          }
-      }
+        }
+    }
 });
 
 // ProcessListeners
