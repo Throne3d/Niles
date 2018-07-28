@@ -1,23 +1,42 @@
 const fs = require("fs");
 const path = require("path");
 const defer = require("promise-defer");
-let settings = require("../settings.js");
 let bot = require("../bot.js");
-let commands = require("./commands.js");
-let minimumPermissions = settings.secrets.minimumPermissions;
+
+function getSettings() {
+    return require("../settings.js");
+}
+function getLogChannel() {
+    return bot.client.channels.get(getSettings().secrets.log_discord_channel);
+}
+function getMinimumPermissions() {
+    return getSettings().secrets.minimumPermissions;
+}
 
 function log() {
     let message = `\`\`\`[${new Date().toUTCString()}] ${Array.from(arguments).join(" ")}\`\`\``;
-    bot.client.channels.get(settings.secrets.log_discord_channel).send(message);
     console.log(message);
+    getLogChannel().send(message);
 }
 
 function logError() {
-    log("[ERROR]", Array.from(arguments).slice(1).join(" "));
+    log("[ERROR]", Array.from(arguments).join(" "));
 }
 
-function readFile(path) {
-    return JSON.parse(fs.readFileSync(path, "utf8"));
+function readFile(filePath) {
+    return JSON.parse(fs.readFileSync(filePath, "utf8"));
+}
+
+function readFileSettingDefault(filePath, defaultValue) {
+    try {
+        const fileData = fs.readFileSync(filePath, "utf8");
+        return JSON.parse(fileData);
+    } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
+
+        fs.writeFileSync(filePath, defaultValue, { encoding: "utf8", flag: "wx" });
+        return JSON.parse(defaultValue);
+    }
 }
 
 function fullname(user) {
@@ -177,7 +196,7 @@ function sendMessageHandler(message, err) {
 function checkPermissions(message) {
     let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
     let missingPermissions = "";
-    minimumPermissions.forEach(function(permission) {
+    getMinimumPermissions().forEach(function(permission) {
         if (!botPermissions[permission]) {
             missingPermissions += "\n" + String(permission);
         }
@@ -191,7 +210,7 @@ function checkPermissions(message) {
 function checkPermissionsManual(message, cmd) {
     let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
     let missingPermissions = "";
-    minimumPermissions.forEach(function(permission) {
+    getMinimumPermissions().forEach(function(permission) {
         if (!botPermissions[permission]) {
             missingPermissions += "\n" + String(permission);
         }
@@ -234,7 +253,9 @@ module.exports = {
     firstUpper,
     log,
     logError,
+    getLogChannel,
     readFile,
+    readFileSettingDefault,
     getStringTime,
     stringDate,
     hourString,

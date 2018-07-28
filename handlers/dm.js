@@ -2,7 +2,7 @@ const path = require("path");
 const helpers = require("./helpers.js");
 const fs = require("fs");
 const usersPath = path.join(__dirname, "..", "stores", "users.json");
-const users = require("../stores/users.json");
+const users = helpers.readFileSettingDefault("stores/users.json", "{}");
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\

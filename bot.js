@@ -3,18 +3,20 @@ let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
 const path = require("path");
-const users = require("./stores/users.json");
+let helpers = require("./handlers/helpers.js");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
-let helpers = require("./handlers/helpers.js");
 let restricted = require("./handlers/nopermissions.js");
 let dm = require("./handlers/dm.js");
+
+const users = helpers.readFileSettingDefault("stores/users.json", "{}");
 
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
+    if (!helpers.getLogChannel()) helpers.logError("No log channel found!");
     helpers.log("Bot is logged in");
     client.user.setStatus("online");
 });
