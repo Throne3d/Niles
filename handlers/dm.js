@@ -1,8 +1,8 @@
 const path = require("path");
 const helpers = require("./helpers.js");
 const fs = require("fs");
-const usersPath = path.join(__dirname, "..", "stores", "users.json");
-const users = helpers.readFileSettingDefault("stores/users.json", "{}");
+const userStorePath = path.join(__dirname, "..", "stores", "users.json");
+const users = helpers.readFileSettingDefault(userStorePath, "{}");
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
@@ -34,7 +34,7 @@ function permissionDMChanger(message) {
             permissionChecker: pieces[1]
         };
         users[message.author.id] = settings;
-        fs.writeFile(usersPath, JSON.stringify(users, "", "\t"), (err) => {
+        fs.writeFile(userStorePath, JSON.stringify(users, "", "\t"), (err) => {
             if (err) {
                 return helpers.log("error writing the users database" + err);
             }

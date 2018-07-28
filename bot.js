@@ -11,7 +11,8 @@ let init = require("./handlers/init.js");
 let restricted = require("./handlers/nopermissions.js");
 let dm = require("./handlers/dm.js");
 
-const users = helpers.readFileSettingDefault("stores/users.json", "{}");
+const userStorePath = path.join(__dirname, "stores", "users.json");
+const users = helpers.readFileSettingDefault(userStorePath, "{}");
 
 client.login(settings.secrets.bot_token);
 
