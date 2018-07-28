@@ -55,16 +55,16 @@ function clean(channel, numberMessages, recurse) {
         }
         if (messages.size === 100 && recurse) {
             channel.bulkDelete(messages).catch((err) => {
-                helpers.log("clean error in guild " + channel.guild.id + err);
+                helpers.logError(`cleaning in guild ${channel.guild.id}`, err);
             });
             clean(channel, 100, true);
         } else {
             channel.bulkDelete(messages).catch((err) => {
-                helpers.log("clean error in guild " + channel.guild.id + err);
+                helpers.logError(`cleaning in guild ${channel.guild.id}`, err);
             });
         }
     }).catch((err) => {
-        helpers.log("function clean in guild:" + channel.guild.id + ":" + err);
+        helpers.logError(`cleaning in guild ${channel.guild.id}`, err);
     });
 }
 
@@ -169,7 +169,7 @@ function getEvents(message, calendarID, dayMap) {
         calendar.lastUpdate = d;
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     }).catch((err) => {
-        helpers.log("function getEvents error in guild: " + message.guild.id + " : " + err);
+        helpers.logError(`getEvents in guild: ${message.guild.id}`, err);
 
         // Catching periodic google rejections:
         if (err.message.includes("Invalid Credentials")) return;
@@ -244,7 +244,7 @@ function postCalendar(message, dayMap) {
                 calendar.calendarMessageId = "";
                 helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
             }
-            return helpers.log("error fetching previous calendar in guild: " + message.guild.id + ": " + err);
+            return helpers.logError(`fetching previous calendar in guild: ${message.guild.id}`, err);
         });
     }
     generateCalendar(message, dayMap).then((embed) => {
@@ -258,7 +258,7 @@ function postCalendar(message, dayMap) {
             setTimeout(function() { startUpdateTimer(message); }, 2000);
         }, 2000);
     }).catch((err) => {
-        helpers.log("function postCalendar error in guild: " + message.guild.id + ": " + err);
+        helpers.logError(`postCalendar in guild: ${message.guild.id}`, err);
     });
 }
 
@@ -279,14 +279,7 @@ function updateCalendar(message, dayMap, human) {
             }
         });
     }).catch((err) => {
-        if (err.code === Discord.Constants.APIErrors.UNKNOWN_MESSAGE) {
-            helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
-            calendar.calendarMessageId = "";
-            helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
-            return;
-        }
-
-        helpers.log("error fetching previous calendar message in guild: " + message.guild.id + ": " + err);
+        helpers.logError(`fetching previous calendar message in guild: ${message.guild.id}`, err);
         calendar.calendarMessageId = "";
         helpers.writeGuildSpecific(message.guild.id, calendar, "calendar");
     });
@@ -313,7 +306,7 @@ function startUpdateTimer(message) {
             helpers.log("Starting update timer in guild: " + message.guild.id);
             return autoUpdater[message.guild.id] = setInterval(function() { calendarUpdater(message, calendarID, dayMap, timerCount[message.guild.id]); }, settings.secrets.calendar_update_interval);
         } catch (err) {
-            helpers.log("error starting the autoupdater" + err);
+            helpers.logError("starting the autoupdater", err);
             clearInterval(autoUpdater[message.guild.id]);
             timerCount[message.guild.id] -= 1;
         }
@@ -344,7 +337,7 @@ function quickAddEvent(message, calendarId) {
         });
         p.resolve(resp);
     }).catch((err) => {
-        helpers.log("function updateCalendar error in guild: " + message.guild.id + ": " + err);
+        helpers.logError(`updateCalendar in guild: ${message.guild.id}`, err);
         p.reject(err);
     });
     return p.promise;
@@ -381,7 +374,7 @@ function deleteEventById(eventId, calendarId, dayMap, message) {
             updateCalendar(message, dayMap, true);
         }, 2000);
     }).catch((err) => {
-        helpers.log("function deleteEventById error in guild: " + message.guild.id + ": " + err);
+        helpers.logError(`deleteEventById in guild: ${message.guild.id}`, err);
     });
 }
 
@@ -482,7 +475,7 @@ function calendarUpdater(message, calendarId, dayMap, _timerCount) {
             updateCalendar(message, dayMap, false);
         }, 4000);
     } catch (err) {
-        helpers.log("error in autoupdater in guild: " + message.guild.id + ": " + err);
+        helpers.logError(`autoupdater in guild: ${message.guild.id}`, err);
         clearInterval(autoUpdater[message.guild.id]);
     }
 }
@@ -548,7 +541,7 @@ function run(message) {
             init.run(message);
         }
         catch (err) {
-            helpers.log("error trying to run init message catcher in guild: " + message.guild.id + ": " + err);
+            helpers.logError(`trying to run init message catcher in guild: ${message.guild.id}`, err);
         }
         message.delete(5000);
     }
@@ -586,7 +579,7 @@ function run(message) {
                 updateCalendar(message, dayMap, true);
             }, 2000);
         }).catch((err) => {
-            helpers.log("error creating event in guild: " + message.guild.id + ": " + err);
+            helpers.logError(`creating event in guild: ${message.guild.id}`, err);
         });
         message.delete(5000);
     }

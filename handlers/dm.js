@@ -36,7 +36,7 @@ function permissionDMChanger(message) {
         users[message.author.id] = settings;
         fs.writeFile(userStorePath, JSON.stringify(users, "", "\t"), (err) => {
             if (err) {
-                return helpers.log("error writing the users database" + err);
+                return helpers.logError("writing the users database", err);
             }
         });
         return message.author.send("okay I've changed that setting.");

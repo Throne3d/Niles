@@ -52,7 +52,7 @@ client.on("message", (message) => {
         try {
             restricted.run(message);
         } catch (err) {
-            helpers.log("error in restricted permissions " + err);
+            helpers.logError("restricted permissions", err);
         }
         return;
     } else if (!helpers.checkPermissions(message)) {
@@ -63,7 +63,7 @@ client.on("message", (message) => {
             init.run(message);
         }
         catch (err) {
-            helpers.log("error running init messages in guild: " + message.guild.id + ":", err);
+            helpers.logError(`running init messages in guild: ${message.guild.id}`, err);
             return message.channel.send("something went wrong");
         }
     } else {
@@ -71,7 +71,7 @@ client.on("message", (message) => {
             commands.run(message);
         }
         catch (err) {
-            helpers.log("error running main message handler in guild: " + message.guild.id + ": " + err);
+            helpers.logError(`running main message handler in guild: ${message.guild.id}`, err);
             return message.channel.send("something went wrong");
         }
     }
@@ -80,7 +80,7 @@ client.on("message", (message) => {
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    helpers.log("uncaughtException error:", err);
+    helpers.logError("uncaughtException", err);
 });
 
 process.on("SIGINT", () => {
