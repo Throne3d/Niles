@@ -17,7 +17,6 @@ const users = helpers.readFileSettingDefault(userStorePath, "{}");
 client.login(settings.secrets.bot_token);
 
 client.on("ready", () => {
-    if (!helpers.getLogChannel()) helpers.logError("No log channel found!");
     helpers.log("Bot is logged in");
     client.user.setStatus("online");
 });
@@ -38,7 +37,7 @@ client.on("message", (message) => {
         try {
             dm.run(message);
         } catch (err) {
-            helpers.log("error in dm channel" + err);
+            helpers.logError("dm channel", err);
         }
         return;
     }
@@ -48,7 +47,7 @@ client.on("message", (message) => {
     if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
         return;
     }
-    helpers.log(`${helpers.fullname(message.author)}:${message.content} || guild:${message.guild.id}`);
+    helpers.log(`${message.author.tag}:${message.content} || guild:${message.guild.id}`);
     if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
         try {
             restricted.run(message);
@@ -64,7 +63,7 @@ client.on("message", (message) => {
             init.run(message);
         }
         catch (err) {
-            helpers.log("error running init messages in guild: " + message.guild.id + ": " + err);
+            helpers.log("error running init messages in guild: " + message.guild.id + ":", err);
             return message.channel.send("something went wrong");
         }
     }
@@ -82,7 +81,7 @@ client.on("message", (message) => {
 // ProcessListeners
 
 process.on("uncaughtException", (err) => {
-    helpers.log("uncaughtException error" + err);
+    helpers.log("uncaughtException error:", err);
 });
 
 process.on("SIGINT", () => {

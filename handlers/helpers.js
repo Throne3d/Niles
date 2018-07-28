@@ -3,6 +3,8 @@ const path = require("path");
 const defer = require("promise-defer");
 let bot = require("../bot.js");
 
+const guildDbPath = path.join(__dirname, "..", "stores/guilddatabase.json");
+
 function getSettings() {
     return require("../settings.js");
 }
@@ -13,16 +15,33 @@ function getMinimumPermissions() {
     return getSettings().secrets.minimumPermissions;
 }
 
-function log() {
-    const logMessage = Array.from(arguments).join(" ");
-    const logString = `[${new Date().toUTCString()}] ${logMessage}`;
-    const tripleGrave = "```";
-    console.log(logString);
-    getLogChannel().send(tripleGrave + logString + tripleGrave);
+let logChannelWarned = false;
+
+function formatLogMessage(message) {
+    return `[${new Date().toUTCString()}] ${message};`;
 }
 
-function logError() {
-    const logMessage = Array.from(arguments).join(" ");
+function log(...logItems) {
+    const logMessage = logItems.join(" ");
+    const logString = formatLogMessage(logMessage);
+    const tripleGrave = "```";
+    console.log(logString); // eslint-disable-line no-console
+
+    const logChannel = getLogChannel();
+    if (logChannel) {
+        logChannel.send(tripleGrave + logString + tripleGrave);
+        return;
+    }
+
+    if (!logChannelWarned) {
+        logChannelWarned = true;
+        // eslint-disable-next-line no-console
+        console.log(formatLogMessage(`No log channel found.`));
+    }
+}
+
+function logError(context, ...logItems) {
+    const logMessage = "error" + (context ? ` in ${context}` : "") + ": " + logItems.join(" ");
     log("[ERROR]", logMessage);
 }
 
@@ -42,14 +61,10 @@ function readFileSettingDefault(filePath, defaultValue) {
     }
 }
 
-function fullname(user) {
-    return `${user.username}#${user.discriminator}`;
-}
-
 function deleteFolderRecursive(folderPath) {
-    if (fs.existsSync(folderPath)) {
-        fs.readdirSync(folderPath).forEach(function(file){
-            var curPath = folderPath + "/" + file;
+    try {
+        fs.readdirSync(folderPath).forEach(function(file) {
+            var curPath = path.join(folderPath, file);
             if (fs.lstatSync(curPath).isDirectory()) {
                 deleteFolderRecursive(curPath);
             } else {
@@ -57,27 +72,33 @@ function deleteFolderRecursive(folderPath) {
             }
         });
         fs.rmdirSync(folderPath);
+    } catch (err) {
+        if (err.code !== "ENOENT") throw err;
     }
 }
 
-function writeGuilddb(guilddb) {
-    let guilddatabase = path.join(__dirname, "..", "stores/guilddatabase.json");
-    fs.writeFile(guilddatabase, JSON.stringify(guilddb, "", "\t"), (err) => {
-        if (err) {
-            return log("error writing the guild database" + err);
-        }
+function writeGuilddb(guildDb) {
+    const formattedJson = JSON.stringify(guildDb, "", "\t");
+    fs.writeFile(guildDbPath, formattedJson, (err) => {
+        if (!err) return;
+        return logError("writing the guild database", err);
     });
 }
 
-function writeGuildSpecific(guildid, json, file) {
-    let fullPath = path.join(__dirname, "..", "stores", guildid, file + ".json");
-    fs.writeFile(fullPath, JSON.stringify(json, "", "\t"), (err) => {
-        if (err) {
-            return log("error writing guild specific database: " + err);
-        }
+function pathForGuildSpecific(guildId, file) {
+    return path.join(__dirname, "..", "stores", guildId, file + ".json");
+}
+
+function writeGuildSpecific(guildId, data, file) {
+    const formattedJson = JSON.stringify(data, "", "\t");
+    const fullPath = pathForGuildSpecific(guildId, file);
+    fs.writeFile(fullPath, formattedJson, (err) => {
+        if (!err) return;
+        return log("writing guild-specific database", err);
     });
 }
 
+// checks if msg both @mentions bot.client.user and contains some string in the list (or singleton) x
 function mentioned(msg, x) {
     if (!Array.isArray(x)) {
         x = [x];
@@ -85,36 +106,36 @@ function mentioned(msg, x) {
     return msg.isMentioned(bot.client.user.id) && x.some((c) => msg.content.toLowerCase().includes(c));
 }
 
+// 24-hour clock
+const hourStrings24 = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
 function hourString(hour) {
-    let hours = ["12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"];
-    return hours[hour];
+    return hourStrings24[hour];
 }
 
+const dayStrings = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 function dayString(number) {
-    let days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    return days[number];
+    return dayStrings[number];
 }
 
+const monthStrings = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 function monthString(number) {
-    let months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    return months[number];
+    return monthStrings[number];
 }
 
 function firstUpper(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-function prependZero(item) {
-    let converted = "";
-    if (String(item).length<2) {
-        converted = "0" + String(item);
-        return converted;
-    }
-    return String(item);
+function zeroPad(item, length) {
+    let itemString = String(item);
+    let zeroCount = Math.max(length - itemString.length, 0);
+    let zeroes = "0".repeat(zeroCount);
+    return zeroes + itemString;
 }
 
-function convertDate(dateToConvert, guildid) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
+// FIXME: timezone awareness should use npm:timezone
+function convertDate(dateToConvert, guildId) {
+    let guildSettingsPath = pathForGuildSpecific(guildId, "settings");
     let guildSettings = readFile(guildSettingsPath);
     let tz = guildSettings.timezone;
     let pieces = tz.split("GMT")[1];
@@ -132,8 +153,8 @@ function convertDate(dateToConvert, guildid) {
     return nd;
 }
 
-function stringDate(date, guildid, hour) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", guildid, "settings.json");
+function stringDate(date, guildId, hour) {
+    let guildSettingsPath = pathForGuildSpecific(guildId, "settings");
     let guildSettings = readFile(guildSettingsPath);
     let offset;
     if (guildSettings.timezone.indexOf("-") === -1) {
@@ -142,8 +163,8 @@ function stringDate(date, guildid, hour) {
         offset = guildSettings.timezone.split("-")[1];
     }
     let year = date.getFullYear();
-    let month = prependZero(date.getMonth() + 1);
-    let day = prependZero(date.getDate());
+    let month = zeroPad(date.getMonth() + 1, 2);
+    let day = zeroPad(date.getDate(), 2);
     let dateString = "";
     if (guildSettings.timezone.indexOf("-") === -1) {
         if (hour === "start") {
@@ -165,7 +186,7 @@ function stringDate(date, guildid, hour) {
 
 function getStringTime(date) {
     let hour = date.getHours();
-    let minutes = prependZero(date.getMinutes());
+    let minutes = zeroPad(date.getMinutes(), 2);
     if (minutes === "00") {
         if (hour <= 11) {
             return hourString(parseInt(date.getHours(), 10)) + "AM";
@@ -185,36 +206,40 @@ function getStringTime(date) {
 }
 
 function sendMessageHandler(message, err) {
+    log(err);
+
     if (err.message === "Missing Permissions") {
         message.author.send("Oh no! I don't have the right permissions in the channel you're trying to use me in! Toggle on all of the 'text permissions' for the **Niles** role");
     }
-    log(err);
+}
+
+function getMissingPermissionsFor(channel) {
+    let botPermissions = channel.permissionsFor(bot.client.user).serialize(true);
+    let missingPermissions = [];
+    getMinimumPermissions().forEach(function(permission) {
+        if (!botPermissions[permission]) {
+            missingPermissions.push(permission);
+        }
+    });
+    return missingPermissions;
 }
 
 function checkPermissions(message) {
-    let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-    let missingPermissions = "";
-    getMinimumPermissions().forEach(function(permission) {
-        if (!botPermissions[permission]) {
-            missingPermissions += "\n" + String(permission);
-        }
-    });
-    if (missingPermissions !== "") {
-        return false;
-    }
-    return true;
+    const missingPermissions = getMissingPermissionsFor(message.channel);
+    return missingPermissions.length === 0;
 }
 
 function checkPermissionsManual(message, cmd) {
-    let botPermissions = message.channel.permissionsFor(bot.client.user).serialize(true);
-    let missingPermissions = "";
-    getMinimumPermissions().forEach(function(permission) {
-        if (!botPermissions[permission]) {
-            missingPermissions += "\n" + String(permission);
-        }
-    });
+    const missingPermissions = getMissingPermissionsFor(message.channel);
+    let missingPermissionsString = missingPermissions.map(x => String(x)).join("\n");
+
     if (missingPermissions !== "") {
-        return message.author.send(`Hey I noticed you tried to use the command \`\`${cmd}\`\`. I am missing the following permissions in channel **${message.channel.name}**: \`\`\`` + missingPermissions + "```" + "\nIf you want to stop getting these DMs type `!permissions 0` in this DM chat.");
+        const promise = message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**:\n`
+          + "```\n"
+          + missingPermissionsString + "\n"
+          + "```\n"
+          + "If you want to stop getting these DMs, type `!permissions 0` in this DM chat.");
+        return promise;
     }
     return message.author.send(`I have all the permissions I need in channel **${message.channel.name}**`);
 }
@@ -241,7 +266,6 @@ function yesThenCollector(message) {
 }
 
 module.exports = {
-    fullname,
     deleteFolderRecursive,
     writeGuilddb,
     writeGuildSpecific,
@@ -258,7 +282,7 @@ module.exports = {
     stringDate,
     hourString,
     convertDate,
-    prependZero,
+    zeroPad,
     sendMessageHandler,
     checkPermissions,
     checkPermissionsManual,

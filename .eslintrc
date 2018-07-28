@@ -14,7 +14,7 @@ rules:
     - "self"
   no-unused-vars:
     - 2
-    - argsIgnorePattern: "^_"
+    - varsIgnorePattern: "^_"
   block-scoped-var: 2
   dot-notation: 2
   eqeqeq: 2

@@ -432,7 +432,7 @@ function deleteEvent(message, calendarId, dayMap) {
         }
     }
     let tz = guildSettings.timezone.split("T")[1];
-    let delDate = dayDate.getFullYear() + "-" + helpers.prependZero(dayDate.getMonth() + 1) + "-" + helpers.prependZero(dayDate.getDate()) + "T" + dTime + ":00:00" + tz;
+    let delDate = dayDate.getFullYear() + "-" + helpers.zeroPad(dayDate.getMonth() + 1, 2) + "-" + helpers.zeroPad(dayDate.getDate(), 2) + "T" + dTime + ":00:00" + tz;
     let key = "day" + String(keyID);
 
     for (let j = 0; j < calendar[key].length; j++) {
