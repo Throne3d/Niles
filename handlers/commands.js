@@ -140,7 +140,7 @@ function getEvents(message, calendarID, dayMap) {
         orderBy: "startTime"
     };
     cal.Events.list(calendarID, params).then((json) => {
-        for(let i = 0; i < json.length; i++) {
+        for (let i = 0; i < json.length; i++) {
             let event = {
                 id: json[i].id,
                 summary: json[i].summary,
@@ -149,7 +149,7 @@ function getEvents(message, calendarID, dayMap) {
             };
             events.push(event);
         }
-        for(let day = 0; day < 7; day++) {
+        for (let day = 0; day < 7; day++) {
             let key = "day" + String(day);
             let matches = [];
             for (let j = 0; j < json.length; j++) {
@@ -477,7 +477,7 @@ function deleteEvent(message, calendarId, dayMap) {
                         res.delete(5000);
                     });
                 }
-                for(let k = 0; k < deleteMessages.length; k++) {
+                for (let k = 0; k < deleteMessages.length; k++) {
                     message.channel.fetchMessage(deleteMessages[k]).then((m) => {
                         m.delete(5000);
                     });
