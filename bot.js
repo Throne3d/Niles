@@ -15,6 +15,15 @@ client.login(settings.secrets.bot_token);
 client.on("ready", () => {
     helpers.log("Bot is logged in");
     client.user.setStatus("online");
+
+    const availableGuilds = Array.from(client.guilds.keys());
+    const knownGuilds = Object.keys(helpers.getGuildDatabase());
+    const unknownGuilds = availableGuilds.filter(x => !knownGuilds.includes(x));
+
+    unknownGuilds.forEach(guildId => {
+        helpers.debug("Unknown guild found at startup, init-ing:", guildId);
+        guilds.create(client.guilds.get(guildId));
+    });
 });
 
 // FIXME: what about guilds that exist prior to the bot being loaded? (or while the bot is offline?)
