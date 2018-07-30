@@ -2,6 +2,7 @@ const fs = require("fs");
 const helpers = require("./helpers.js");
 const commands = require("./commands.js");
 
+// TODO: check this wipes data if used on an extant guild?
 exports.create = (guild) => {
     let guildPath = helpers.folderForSpecificGuild(guild.id);
     let d = new Date();

@@ -43,7 +43,7 @@ client.on("message", (message) => {
     }
     if (message.channel.type === "dm") {
         try {
-            dm.run(message);
+            dm.run(message, client);
         } catch (err) {
             helpers.logError("dm channel", err);
         }
@@ -61,7 +61,7 @@ client.on("message", (message) => {
 
     if (!helpers.checkPermissions(message) && helpers.getUserSetting(message.author.id, 'permissionChecker') !== 0) {
         try {
-            restricted.run(message);
+            restricted.run(message, client);
         } catch (err) {
             helpers.logError("restricted permissions", err);
         }
@@ -72,14 +72,14 @@ client.on("message", (message) => {
 
     if (!guildSettings.calendarID || !guildSettings.timezone) {
         try {
-            init.run(message);
+            init.run(message, client);
         } catch (err) {
             helpers.logError(`running init messages in guild: ${message.guild.id}`, err);
             return message.channel.send("something went wrong");
         }
     } else {
         try {
-            commands.run(message);
+            commands.run(message, client);
         } catch (err) {
             helpers.logError(`running main message handler in guild: ${message.guild.id}`, err);
             return message.channel.send("something went wrong");

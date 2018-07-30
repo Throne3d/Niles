@@ -1,7 +1,10 @@
 const fs = require("fs");
 const path = require("path");
+const util = require("util");
 const defer = require("promise-defer");
 let bot = require("../bot.js");
+
+const writeFilePromise = util.promisify(fs.writeFile);
 
 function folderForSpecificGuild(guildId) {
     return path.join(__dirname, "..", "stores", guildId);
@@ -118,7 +121,7 @@ function removeGuildFromDatabase(guildId) {
 function writeGuildSpecific(guildId, data, file) {
     const formattedJson = JSON.stringify(data, "", "\t");
     const fullPath = pathForSpecificGuild(guildId, file);
-    fs.writeFile(fullPath, formattedJson, (err) => {
+    return writeFilePromise(fullPath, formattedJson).catch(err => {
         if (!err) return;
         return logError("writing guild-specific database", err);
     });
@@ -310,6 +313,10 @@ function yesThenCollector(message) {
     return p.promise;
 }
 
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
+}
+
 module.exports = {
     getGuildDatabase,
     amendGuildDatabase,
@@ -343,5 +350,7 @@ module.exports = {
     sendMessageHandler,
     checkPermissions,
     checkPermissionsManual,
-    yesThenCollector
+    yesThenCollector,
+
+    escapeRegExp,
 };
