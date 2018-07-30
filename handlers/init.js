@@ -1,26 +1,7 @@
-const helpers = require("./helpers.js");
-const guilds = require("./guilds.js");
+const helpers = require("./helpers");
+const guilds = require("./guilds");
 
-const HELP_MESSAGE = "```\
-        Niles Usage - SETUP MODE\n\
----------------------------\n\
-NOTE: ALL COMMANDS BECOME AVAILABLE AFTER SETUP IS COMPLETE\n\
-!setup               -  Get details on how to setup Niles for use.\n\
-!prefix              -  View or change the prefix for Niles\n\
-!id                  -  Set the Google calendar ID for the guild\n\
-!tz                  -  Set the timezone for the guild\n\
-!help                -  Display this message\n\
-```\n\
-Visit http://niles.seanecoffey.com/setup for more info.";
-
-const SETUP_MESSAGE = "\
-Hi! Lets get me setup for use in this Discord. The steps are outlined below, but for a detailed setup guide, visit http://niles.seanecoffey.com/setup \n\
-\n1. Invite `niles-291@niles-169605.iam.gserviceaccount.com` to 'Make changes to events' under the Permission Settings on the Google Calendar you want to use with Niles\n\
-2. Enter the Calendar ID of the calendar to Discord using the `!id` command, i.e. `!id 123abc@123abc.com`\n\
-3. Enter the timezone you want to use in Discord with the `!tz` command, i.e. `!tz gmt+10:00`, (Note: Must be formatted like this)\n\
-\n Niles should now be able to sync with your Google calendar and interact with on you on Discord, try `!display` to get started!";
-
-//functions
+const { NOTIFICATION_SETUP, USAGE_SETUP } = require("./strings");
 
 function writeSetting(message, value, setting) {
     let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
@@ -113,13 +94,13 @@ exports.run = function(message) {
     const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
 
     // Function Mapping
-    let setup = () => message.channel.send(SETUP_MESSAGE);
+    let setup = () => message.channel.send(NOTIFICATION_SETUP);
     let id = () => logId(message);
     let tz = () => logTz(message);
     let init = () => guilds.create(message.guild);
     let prefix = () => setPrefix(message);
     let restricted = () => message.channel.send("You haven't finished setting up! Try `!setup` for details on how to start.");
-    let help = () => message.channel.send(HELP_MESSAGE);
+    let help = () => message.channel.send(USAGE_SETUP);
 
     let cmdFns = {
         setup,

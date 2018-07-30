@@ -14,27 +14,10 @@ let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
 let timerCount = [];
-const HELP_MESSAGE = "```\
-        Niles Usage\n\
----------------------------\n\
-!display             -  Display your calendar\n\
-!update / !sync      -  Update the Calendar\n\
-!create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm\n\
-!delete              -  Delete an event using the form !delete Friday 8pm, ONLY works like this !delete <day> <starttime>\n\
-!clean / !purge      -  Deletes messages in current channel, either !clean or !clean <number>\n\
-!stats / !info       -  Display list of statistics and information about the Niles bot\n\
-!invite              -  Get the invite link for Niles to join your server!\n\
-!setup               -  Get details on how to setup Niles\n\
-!id                  -  Set the Google calendar ID for the guild\n\
-!tz                  -  Set the timezone for the guild\n\
-!prefix              -  View or change the prefix for Niles\n\
-!help                -  Display this message\n\
-```\
-Visit http://niles.seanecoffey.com for more info.";
 const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
 You should also check that you have entered the correct calendar id using `!id`.\n\
 \nIf you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn";
-exports.helpmessage = HELP_MESSAGE;
+const { USAGE } = require("./strings");
 
 //functions
 
@@ -523,7 +506,7 @@ function run(message) {
         });
     }
     if (cmd === "help" || helpers.mentioned(message, "help")) {
-        message.channel.send(HELP_MESSAGE);
+        message.channel.send(USAGE);
         message.delete(5000);
     }
     if (cmd === "invite" || helpers.mentioned(message, "invite")) {

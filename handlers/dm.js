@@ -1,23 +1,7 @@
-const helpers = require("./helpers.js");
+const helpers = require("./helpers");
+const { USAGE } = require("./strings");
 
 // FIXME: include DM commands specifically
-const HELP_MESSAGE = "```\
-        Niles Usage\n\
----------------------------\n\
-!display             -  Display your calendar\n\
-!update / !sync      -  Update the Calendar\n\
-!create / !scrim     -  Create events using GCal's default interpreter - works best like !scrim xeno June 5 8pm - 9pm\n\
-!delete              -  Delete an event using the form !delete Friday 8pm, ONLY works like this !delete <day> <starttime>\n\
-!clean / !purge      -  Deletes messages in current channel, either !clean or !clean <number>\n\
-!stats / !info       -  Display list of statistics and information about the Niles bot\n\
-!invite              -  Get the invite link for Niles to join your server!\n\
-!setup               -  Get details on how to setup Niles\n\
-!id                  -  Set the Google calendar ID for the guild\n\
-!tz                  -  Set the timezone for the guild\n\
-!prefix              -  View or change the prefix for Niles\n\
-!help                -  Display this message\n\
-```\
-Visit http://niles.seanecoffey.com for more info.";
 
 function permissions(message, args) {
     if (args.length !== 1) {
@@ -36,7 +20,7 @@ function permissions(message, args) {
 
 function help(message, args) {
     if (args.length > 0) message.author.send("This command doesn't take an argument.");
-    message.author.send(HELP_MESSAGE);
+    message.author.send(USAGE);
 }
 
 const commands = {
