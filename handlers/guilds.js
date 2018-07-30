@@ -26,7 +26,7 @@ exports.create = (guild) => {
         timezone: "",
         helpmenu: "1"
     };
-    guilddatabase[guild.id] = {
+    const guildData = {
         guildid: guild.id,
         name: guild.name,
         region: guild.region,
@@ -36,7 +36,7 @@ exports.create = (guild) => {
     };
     helpers.writeGuildSpecific(guild.id, emptyCal, "calendar");
     helpers.writeGuildSpecific(guild.id, defaultSettings, "settings");
-    helpers.writeGuilddb(guilddatabase);
+    helpers.amendGuildDatabase({ [guild.id]: guildData });
     helpers.log(`Guild ${guild.id} has been created`);
     //guild.defaultChannel.send("Hi, I'm **" + bot.client.user.username + "**, I can help you sync Google Calendars with Discord! Try ``!setup`` for details on how to get started.  **NOTE**: Make sure I have the right permissions in the channel you try and use me in!");
 };
@@ -44,8 +44,7 @@ exports.create = (guild) => {
 exports.delete = (guild) => {
     let guildPath = helpers.folderForSpecificGuild(guild.id);
     helpers.deleteFolderRecursive(guildPath);
-    delete guilddatabase[guild.id];
-    helpers.writeGuilddb(guilddatabase);
+    helpers.removeGuildFromDatabase(guild.id);
     commands.deleteUpdater(guild.id);
     helpers.log(`Guild ${guild.id} has been deleted`);
 };

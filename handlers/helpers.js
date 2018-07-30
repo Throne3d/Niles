@@ -3,8 +3,6 @@ const path = require("path");
 const defer = require("promise-defer");
 let bot = require("../bot.js");
 
-const guildDbPath = path.join(__dirname, "..", "stores", "guilddatabase.json");
-
 function folderForSpecificGuild(guildId) {
     return path.join(__dirname, "..", "stores", guildId);
 }
@@ -91,12 +89,30 @@ function deleteFolderRecursive(folderPath) {
     }
 }
 
-function writeGuilddb(guildDb) {
-    const formattedJson = JSON.stringify(guildDb, "", "\t");
-    fs.writeFile(guildDbPath, formattedJson, (err) => {
+const guildDatabasePath = path.join(__dirname, "..", "stores", "guilddatabase.json");
+let guildDatabase;
+
+function getGuildDatabase() {
+    guildDatabase = guildDatabase || readFile(guildDatabasePath);
+    return guildDatabase;
+}
+
+function writeGuildDatabase() {
+    const formattedJson = JSON.stringify(guildDatabase, "", "\t");
+    fs.writeFile(guildDatabasePath, formattedJson, (err) => {
         if (!err) return;
         return logError("writing the guild database", err);
     });
+}
+
+function amendGuildDatabase(partialGuildDb) {
+    Object.assign(guildDatabase, partialGuildDb);
+    writeGuildDatabase();
+}
+
+function removeGuildFromDatabase(guildId) {
+    delete guildDatabase[guildId];
+    writeGuildDatabase();
 }
 
 function writeGuildSpecific(guildId, data, file) {
@@ -295,9 +311,13 @@ function yesThenCollector(message) {
 }
 
 module.exports = {
+    getGuildDatabase,
+    amendGuildDatabase,
+    removeGuildFromDatabase,
+
+    folderForSpecificGuild,
     pathForSpecificGuild,
     deleteFolderRecursive,
-    writeGuilddb,
     writeGuildSpecific,
     mentioned,
     dayString,
