@@ -103,7 +103,7 @@ function writeGuildSpecific(guildId, data, file) {
     });
 }
 
-const userStorePath = path.join(__dirname, "stores", "users.json");
+const userStorePath = path.join(__dirname, "..", "stores", "users.json");
 const users = readFileSettingDefault(userStorePath, "{}");
 
 const userDefaults = {}; // only used in reading; that is, only explicitly-set values are persisted
