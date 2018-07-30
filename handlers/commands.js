@@ -39,7 +39,7 @@ exports.helpmessage = HELP_MESSAGE;
 //functions
 
 function clean(channel, numberMessages, recurse) {
-    let calendarPath = path.join(__dirname, "..", "stores", channel.guild.id, "calendar.json");
+    let calendarPath = helpers.pathForSpecificGuild(channel.guild.id, "calendar");
     let calendar = helpers.readFile(calendarPath);
     channel.fetchMessages({ limit: numberMessages}).then((messages) => { //If the current calendar is deleted
         messages.forEach(function(message) {
@@ -118,7 +118,7 @@ function createDayMap(message) {
     return dayMap;
 }
 
-function checkDateMatch (date1, date2) {
+function checkDateMatch(date1, date2) {
     return (date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate());
 }
 
@@ -539,8 +539,7 @@ function run(message) {
     if (["setup", "start", "id", "tz", "prefix"].includes(cmd) || helpers.mentioned(message, ["setup", "start", "id", "tz", "prefix"])) {
         try {
             init.run(message);
-        }
-        catch (err) {
+        } catch (err) {
             helpers.logError(`trying to run init message catcher in guild: ${message.guild.id}`, err);
         }
         message.delete(5000);

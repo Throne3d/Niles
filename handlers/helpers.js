@@ -3,7 +3,10 @@ const path = require("path");
 const defer = require("promise-defer");
 let bot = require("../bot.js");
 
-const guildDbPath = path.join(__dirname, "..", "stores/guilddatabase.json");
+const guildDbPath = path.join(__dirname, "..", "stores", "guilddatabase.json");
+function pathForSpecificGuild(guildId, file) {
+    return path.join(__dirname, "..", "stores", guildId, file + ".json");
+}
 
 function getSettings() {
     return require("../settings.js");
@@ -19,6 +22,12 @@ let logChannelWarned = false;
 
 function formatLogMessage(message) {
     return `[${new Date().toUTCString()}] ${message};`;
+}
+
+function debug(...logItems) {
+    const logMessage = logItems.join(" ");
+    const logString = formatLogMessage(logMessage);
+    console.debug(logString); // eslint-disable-line no-console
 }
 
 function log(...logItems) {
@@ -85,16 +94,12 @@ function writeGuilddb(guildDb) {
     });
 }
 
-function pathForGuildSpecific(guildId, file) {
-    return path.join(__dirname, "..", "stores", guildId, file + ".json");
-}
-
 function writeGuildSpecific(guildId, data, file) {
     const formattedJson = JSON.stringify(data, "", "\t");
-    const fullPath = pathForGuildSpecific(guildId, file);
+    const fullPath = pathForSpecificGuild(guildId, file);
     fs.writeFile(fullPath, formattedJson, (err) => {
         if (!err) return;
-        return log("writing guild-specific database", err);
+        return logError("writing guild-specific database", err);
     });
 }
 
@@ -135,7 +140,7 @@ function zeroPad(item, length) {
 
 // FIXME: timezone awareness should use npm:timezone
 function convertDate(dateToConvert, guildId) {
-    let guildSettingsPath = pathForGuildSpecific(guildId, "settings");
+    let guildSettingsPath = pathForSpecificGuild(guildId, "settings");
     let guildSettings = readFile(guildSettingsPath);
     let tz = guildSettings.timezone;
     let pieces = tz.split("GMT")[1];
@@ -154,7 +159,7 @@ function convertDate(dateToConvert, guildId) {
 }
 
 function stringDate(date, guildId, hour) {
-    let guildSettingsPath = pathForGuildSpecific(guildId, "settings");
+    let guildSettingsPath = pathForSpecificGuild(guildId, "settings");
     let guildSettings = readFile(guildSettingsPath);
     let offset;
     if (guildSettings.timezone.indexOf("-") === -1) {
@@ -264,6 +269,7 @@ function yesThenCollector(message) {
 }
 
 module.exports = {
+    pathForSpecificGuild,
     deleteFolderRecursive,
     writeGuilddb,
     writeGuildSpecific,
@@ -271,11 +277,15 @@ module.exports = {
     dayString,
     monthString,
     firstUpper,
+
+    debug,
     log,
     logError,
     getLogChannel,
+
     readFile,
     readFileSettingDefault,
+
     getStringTime,
     stringDate,
     hourString,

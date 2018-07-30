@@ -3,6 +3,8 @@ const helpers = require("./helpers.js");
 const fs = require("fs");
 const userStorePath = path.join(__dirname, "..", "stores", "users.json");
 const users = helpers.readFileSettingDefault(userStorePath, "{}");
+
+// FIXME: include DM commands specifically
 const HELP_MESSAGE = "```\
         Niles Usage\n\
 ---------------------------\n\
