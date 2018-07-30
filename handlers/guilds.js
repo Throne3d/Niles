@@ -1,11 +1,9 @@
 const fs = require("fs");
-const path = require("path");
-const guilddatabase = require("../stores/guilddatabase.json");
 const helpers = require("./helpers.js");
 const commands = require("./commands.js");
 
 exports.create = (guild) => {
-    let guildPath = path.join(__dirname, "..", "stores", guild.id);
+    let guildPath = helpers.folderForSpecificGuild(guild.id);
     let d = new Date();
     if (!fs.existsSync(guildPath)) {
         fs.mkdirSync(guildPath);
@@ -44,7 +42,7 @@ exports.create = (guild) => {
 };
 
 exports.delete = (guild) => {
-    let guildPath = path.join(__dirname, "..", "stores", guild.id);
+    let guildPath = helpers.folderForSpecificGuild(guild.id);
     helpers.deleteFolderRecursive(guildPath);
     delete guilddatabase[guild.id];
     helpers.writeGuilddb(guilddatabase);

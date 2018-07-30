@@ -4,8 +4,13 @@ const defer = require("promise-defer");
 let bot = require("../bot.js");
 
 const guildDbPath = path.join(__dirname, "..", "stores", "guilddatabase.json");
+
+function folderForSpecificGuild(guildId) {
+    return path.join(__dirname, "..", "stores", guildId);
+}
+
 function pathForSpecificGuild(guildId, file) {
-    return path.join(__dirname, "..", "stores", guildId, file + ".json");
+    return path.join(folderForSpecificGuild(guildId), `${file}.json`);
 }
 
 function getSettings() {

@@ -1,4 +1,3 @@
-const path = require("path");
 const helpers = require("./helpers.js");
 let allCommands = [
     "clean",
@@ -48,7 +47,7 @@ function run(message) {
         return helpers.log("no permission to send messages.");
     }
     // FIXME: remove later^^
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
     if (allCommands.includes(cmd) || helpers.mentioned(message, allCommands)) {

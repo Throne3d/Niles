@@ -1,4 +1,3 @@
-const path = require("path");
 const helpers = require("./helpers.js");
 const guilds = require("./guilds.js");
 
@@ -24,7 +23,7 @@ Hi! Lets get me setup for use in this Discord. The steps are outlined below, but
 //functions
 
 function writeSetting(message, value, setting) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     guildSettings[setting] = value;
     message.channel.send("Okay I'm adding your " + setting + " as `" + value + "`");
@@ -32,7 +31,7 @@ function writeSetting(message, value, setting) {
 }
 
 function logId(message) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let calendarId = message.content.split(" ")[1];
     if (!calendarId && !guildSettings.calendarID) {
@@ -60,7 +59,7 @@ function logId(message) {
 }
 
 function logTz(message) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let tz = message.content.split(" ")[1];
     if (!tz && !guildSettings.timezone) {
@@ -89,7 +88,7 @@ function logTz(message) {
 }
 
 function setPrefix(message) {
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     let newPrefix = message.content.split(" ")[1];
     if (!newPrefix) {
@@ -109,7 +108,7 @@ exports.run = function(message) {
     if (!helpers.checkPermissions(message)) {
         return helpers.log("no permission to send messages.");
     }
-    let guildSettingsPath = path.join(__dirname, "..", "stores", message.guild.id, "settings.json");
+    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
     const cmd = message.content.toLowerCase().substring(guildSettings.prefix.length).split(" ")[0];
 
