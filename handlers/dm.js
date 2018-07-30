@@ -1,8 +1,4 @@
-const path = require("path");
 const helpers = require("./helpers.js");
-const fs = require("fs");
-const userStorePath = path.join(__dirname, "..", "stores", "users.json");
-const users = helpers.readFileSettingDefault(userStorePath, "{}");
 
 // FIXME: include DM commands specifically
 const HELP_MESSAGE = "```\
@@ -23,45 +19,43 @@ const HELP_MESSAGE = "```\
 ```\
 Visit http://niles.seanecoffey.com for more info.";
 
-function permissionDMChanger(message) {
-    let pieces = message.content.split(" ");
-    if (!pieces[1]) {
-        return message.author.send("You didn't enter an argument. Use `!permissions 0`");
+function permissions(message, args) {
+    if (args.length !== 1) {
+        return message.author.send("This command accepts exactly one argument. For example, use `!permissions 0`.");
     }
-    if (pieces[1] && !Number.isInteger(parseInt(pieces[1], 10))) {
-        return message.author.send("You can only use a number i.e. `!permissions 0`");
+
+    const arg = parseInt(arg[0], 10);
+    if (!Number.isInteger(arg) || ![0, 1].includes(arg)) {
+        return message.author.send("You must use an argument of either 0 or 1.");
     }
-    if (["0", "1"].includes(pieces[1])) {
-        let settings = {
-            permissionChecker: pieces[1]
-        };
-        users[message.author.id] = settings;
-        fs.writeFile(userStorePath, JSON.stringify(users, "", "\t"), (err) => {
-            if (err) {
-                return helpers.logError("writing the users database", err);
-            }
-        });
-        return message.author.send("okay I've changed that setting.");
-    }
-    return message.author.send("I didn't change anything, use `!permissions 0` or `!permissions 1`");
+
+    helpers.amendUserSettings(message.author.id, { permissionChecker: arg });
+
+    return message.author.send(`Okay, I've now set permissions to ${arg}.`);
 }
 
-function run (message) {
-    const cmd = message.content.toLowerCase().substring(1).split(" ")[0];
-    //Command to function mappings
-    let help = () => message.author.send(HELP_MESSAGE);
-    let permissions = () => permissionDMChanger(message);
-    let cmdFns = {
-        permissions,
-        help
-    };
-    let cmdFn = cmdFns[cmd];
-    if (cmdFn) {
-        cmdFn();
-    }
-    if (message.content === "help") {
-        message.author.send(HELP_MESSAGE);
-    }
+function help(message, args) {
+    if (args.length > 0) message.author.send("This command doesn't take an argument.");
+    message.author.send(HELP_MESSAGE);
+}
+
+const commands = {
+    permissions,
+    help,
+};
+
+function run(message) {
+    const cmdBits = message.content.match(/^!?(\w+)\b/);
+    if (!cmdBits) return message.author.send("That doesn't look like a command. Please use `help` to get a list of available commands, with associated syntaxes.");
+
+    const cmdText = cmdBits[1];
+    const cmdName = Object.keys(commands).find(cmd => cmd.localeCompare(cmdText, "en", { sensitivity: "base" }) === 0);
+
+    if (!cmdName) return message.author.send("I don't understand that command. Please use `help` to get a list of available commands.");
+
+    const args = message.content.replace(cmdBits, "").trim().split(/\s+/);
+
+    return commands[cmdName](message, args);
 }
 
 module.exports = { run };

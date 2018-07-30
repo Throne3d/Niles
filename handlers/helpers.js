@@ -103,6 +103,27 @@ function writeGuildSpecific(guildId, data, file) {
     });
 }
 
+const userStorePath = path.join(__dirname, "stores", "users.json");
+const users = readFileSettingDefault(userStorePath, "{}");
+
+const userDefaults = {}; // only used in reading; that is, only explicitly-set values are persisted
+
+// uses cached version of user data
+function amendUserSettings(userId, partialSettings) {
+    users[userId] = Object.assign({}, users[userId], partialSettings);
+
+    const formattedJson = JSON.stringify(users, "", "\t");
+    fs.writeFile(userStorePath, formattedJson, (err) => {
+        if (!err) return;
+        return logError("writing the users database", err);
+    });
+}
+
+function getUserSetting(userId, settingName) {
+    const apparentSettings = Object.assign({}, userDefaults, users[userId]);
+    return apparentSettings[settingName];
+}
+
 // checks if msg both @mentions bot.client.user and contains some string in the list (or singleton) x
 function mentioned(msg, x) {
     if (!Array.isArray(x)) {
@@ -277,6 +298,9 @@ module.exports = {
     dayString,
     monthString,
     firstUpper,
+
+    amendUserSettings,
+    getUserSetting,
 
     debug,
     log,

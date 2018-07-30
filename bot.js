@@ -2,7 +2,6 @@ let discord = require("discord.js");
 let client = new discord.Client();
 exports.discord = discord;
 exports.client = client;
-const path = require("path");
 let helpers = require("./handlers/helpers.js");
 let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
@@ -10,9 +9,6 @@ let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
 let restricted = require("./handlers/nopermissions.js");
 let dm = require("./handlers/dm.js");
-
-const userStorePath = path.join(__dirname, "stores", "users.json");
-const users = helpers.readFileSettingDefault(userStorePath, "{}");
 
 client.login(settings.secrets.bot_token);
 
@@ -54,7 +50,7 @@ client.on("message", (message) => {
 
     helpers.log(`[${message.guild.id}] ${message.author.tag}: ${message.content}}`);
 
-    if (!helpers.checkPermissions(message) && (!users[message.author.id] || users[message.author.id].permissionChecker === "1" || !users[message.author.id].permissionChecker)) {
+    if (!helpers.checkPermissions(message) && helpers.getUserSetting(message.author.id, 'permissionChecker') !== 0) {
         try {
             restricted.run(message);
         } catch (err) {
