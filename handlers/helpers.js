@@ -21,7 +21,7 @@ function getMinimumPermissions() {
 let logChannelWarned = false;
 
 function formatLogMessage(message) {
-    return `[${new Date().toUTCString()}] ${message};`;
+    return `[${new Date().toUTCString()}] ${message}`;
 }
 
 function debug(...logItems) {
