@@ -165,7 +165,7 @@ exports.run = function(message, client) {
     const cmdParts = helpers.parseCommand(message, client, Object.keys(commands));
     if (typeof cmdParts === 'undefined') return;
 
-    const hasPermissions = helpers.checkPermissions(message);
+    const hasPermissions = helpers.checkMinimalPermissions(message);
 
     if (cmdParts === null) {
         // if command unrecognized, notify iff can respond in channel.
@@ -177,7 +177,7 @@ exports.run = function(message, client) {
 
     if (!hasPermissions) {
         helpers.log(`No permission to send messages, in guild ${message.guild.id}, channel ${message.channel.id}, for command: \`${cmdName}\``);
-        message.author.send("I can't seem to post in that channel – try giving me the 'Send Messages' permission, then running that command again.");
+        message.author.send("I can't seem to post in that channel – try giving me the ability to read and send messages, as well as permissions to read channel history, then running that command again.");
         return;
     }
 

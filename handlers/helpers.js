@@ -20,9 +20,6 @@ function getSettings() {
 function getLogChannel() {
     return bot.client.channels.get(getSettings().secrets.log_discord_channel);
 }
-function getMinimumPermissions() {
-    return getSettings().secrets.minimumPermissions;
-}
 
 let logChannelWarned = false;
 
@@ -266,20 +263,25 @@ function sendMessageHandler(message, err) {
     }
 }
 
+const PERMS_FULL = ["VIEW_CHANNEL", "SEND_MESSAGES", "MANAGE_MESSAGES", "EMBED_LINKS", "ATTACH_FILES", "READ_MESSAGE_HISTORY"];
 function getMissingPermissionsFor(channel) {
-    let botPermissions = channel.permissionsFor(bot.client.user).serialize(true);
-    let missingPermissions = [];
-    getMinimumPermissions().forEach(function(permission) {
-        if (!botPermissions[permission]) {
-            missingPermissions.push(permission);
-        }
-    });
-    return missingPermissions;
+    return channel.permissionsFor(bot.client.user).missing(PERMS_FULL);
+}
+
+const PERMS_MINIMAL = ["VIEW_CHANNEL", "SEND_MESSAGES", "READ_MESSAGE_HISTORY"];
+function getMissingMinimalPermissionsFor(channel) {
+    return channel.permissionsFor(bot.client.user).missing(PERMS_MINIMAL);
+}
+
+function checkMinimalPermissions(message) {
+    const missingPermissions = getMissingMinimalPermissionsFor(message.channel);
+    if (missingPermissions.length > 0) log(`Missing *minimal* permissions in guild ${message.guild.id}, channel ${message.channel.id}:`, missingPermissions);
+    return missingPermissions.length === 0;
 }
 
 function checkPermissions(message) {
     const missingPermissions = getMissingPermissionsFor(message.channel);
-    log(`Missing permissions in guild ${message.guild.id}, channel ${message.channel.id}:`, missingPermissions);
+    if (missingPermissions.length > 0) log(`Missing permissions in guild ${message.guild.id}, channel ${message.channel.id}:`, missingPermissions);
     return missingPermissions.length === 0;
 }
 
@@ -403,9 +405,11 @@ module.exports = {
     hourString,
     convertDate,
     zeroPad,
+
     sendMessageHandler,
     checkPermissions,
     checkPermissionsManual,
+    checkMinimalPermissions,
     yesThenCollector,
 
     escapeRegExp,
