@@ -160,33 +160,26 @@ const commands = {
 };
 
 // called for all messages encountered in the init phase
-exports.run = function(message, bot) {
-    // FIXME: extract fetching settings, so this doesn't use a lot of resources on heavy-use servers in the init phase
-    let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
-    let guildSettings = helpers.readFile(guildSettingsPath);
-
+exports.run = function(message, client) {
     // FIXME: allow mention-style commands
-    const cmdBits = message.content.match(new RegExp(`^(${helpers.escapeRegExp(guildSettings.prefix)})?(\\w+)\\b/`));
-    if (!cmdBits) return;
-
-    const [_match, _prefix, cmdText] = cmdBits;
-    const cmdName = Object.keys(commands).find(cmd => cmd.localeCompare(cmdText, "en", { sensitivity: "base" }) === 0);
+    const cmdParts = helpers.parseCommand(message, client, Object.keys(commands));
+    if (typeof cmdParts === 'undefined') return;
 
     const hasPermissions = helpers.checkPermissions(message);
 
-    if (!cmdName) {
+    if (cmdParts === null) {
         // if command unrecognized, notify iff can respond in channel.
         if (!hasPermissions) return;
-        return message.author.send("I don't understand that command. Please use `help` to get a list of available commands.");
+        return message.channel.send("I don't understand that command. Please use `help` to get a list of available commands.");
     }
 
+    const [cmdName, args] = cmdParts;
+
     if (!hasPermissions) {
-        helpers.log(`No permission to send messages, in guild ${message.guild.id}, channel ${message.channel.id}, for command: \`${cmdBits[0]}\``);
+        helpers.log(`No permission to send messages, in guild ${message.guild.id}, channel ${message.channel.id}, for command: \`${cmdName}\``);
         message.author.send("I can't seem to post in that channel – try giving me the 'Send Messages' permission, then running that command again.");
         return;
     }
 
-    const args = message.content.replace(cmdBits, "").trim().split(/\s+/);
-
-    return commands[cmdName](message, args, bot);
+    return commands[cmdName](message, args, client);
 };

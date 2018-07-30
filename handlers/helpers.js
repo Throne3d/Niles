@@ -44,7 +44,7 @@ function log(...logItems) {
 
     const logChannel = getLogChannel();
     if (logChannel) {
-        logChannel.send(tripleGrave + logString + tripleGrave);
+        logChannel.send(tripleGrave + "\n" + logString + "\n" + tripleGrave);
         return;
     }
 
@@ -116,6 +116,10 @@ function amendGuildDatabase(partialGuildDb) {
 function removeGuildFromDatabase(guildId) {
     delete guildDatabase[guildId];
     writeGuildDatabase();
+}
+
+function isGuildInited(guildSettings) {
+    return guildSettings.calendarID && guildSettings.timezone;
 }
 
 function writeGuildSpecific(guildId, data, file) {
@@ -275,6 +279,7 @@ function getMissingPermissionsFor(channel) {
 
 function checkPermissions(message) {
     const missingPermissions = getMissingPermissionsFor(message.channel);
+    log(`Missing permissions in guild ${message.guild.id}, channel ${message.channel.id}:`, missingPermissions);
     return missingPermissions.length === 0;
 }
 
@@ -313,6 +318,53 @@ function yesThenCollector(message) {
     return p.promise;
 }
 
+function isCommand(message, client) {
+    // FIXME: cache guild settings, so this doesn't use a lot of resources on heavy-use servers
+    let guildSettingsPath = pathForSpecificGuild(message.guild.id, "settings");
+    let guildSettings = readFile(guildSettingsPath);
+
+    return message.content.match(new RegExp(`^${escapeRegExp(guildSettings.prefix)}`, "i")) || message.isMentioned(client.user);
+}
+
+// undefined if it doesn't look like a command
+// null if it looks like a command, but not an acceptable one
+// else: [commandString, [...args]]
+function parseCommand(message, client, acceptableCommands) {
+    let guildSettingsPath = pathForSpecificGuild(message.guild.id, "settings");
+    let guildSettings = readFile(guildSettingsPath);
+
+    let content = message.cleanContent;
+    let cmdName, argString;
+    if (message.isMentioned(client.user)) {
+        const clientName = message.guild.member(client.user).displayName;
+        const mentionMatch = new RegExp(escapeRegExp(`@${clientName}`), "g");
+        content = content.replace(mentionMatch, "").trim();
+        cmdName = content.split(/\s+/)[0];
+        argString = content.replace(cmdName, "").trim();
+    } else {
+        const prefixMatch = new RegExp(`^${escapeRegExp(guildSettings.prefix)}(\\w+)\\b`, "i");
+
+        const match = content.match(prefixMatch);
+        if (!match) return;
+        cmdName = match[1];
+        argString = content.replace(match[0], "").trim();
+    }
+
+    const args = argString.split(/\s+/);
+
+    if (acceptableCommands) {
+        debug("First parse:", cmdName, args);
+        debug("Testing against:", acceptableCommands);
+
+        cmdName = acceptableCommands.find(cmd => cmd.localeCompare(cmdName, "en", { sensitivity: "base" }) === 0);
+        if (!cmdName) return null;
+    }
+
+    debug("Acceptable command:", cmdName, args);
+
+    return [cmdName, args];
+}
+
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); // $& means the whole matched string
 }
@@ -321,6 +373,10 @@ module.exports = {
     getGuildDatabase,
     amendGuildDatabase,
     removeGuildFromDatabase,
+    isGuildInited,
+
+    isCommand,
+    parseCommand,
 
     folderForSpecificGuild,
     pathForSpecificGuild,

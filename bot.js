@@ -7,7 +7,6 @@ let settings = require("./settings.js");
 let commands = require("./handlers/commands.js");
 let guilds = require("./handlers/guilds.js");
 let init = require("./handlers/init.js");
-let restricted = require("./handlers/nopermissions.js");
 let dm = require("./handlers/dm.js");
 
 client.login(settings.secrets.bot_token);
@@ -53,37 +52,29 @@ client.on("message", (message) => {
     // only load guild settings after checking that message is not direct message.
     let guildSettingsPath = helpers.pathForSpecificGuild(message.guild.id, "settings");
     let guildSettings = helpers.readFile(guildSettingsPath);
-    if (!message.content.toLowerCase().startsWith(guildSettings.prefix) && !message.isMentioned(client.user.id)) {
+
+    // return if message doesn't look command-like (prefixed relevantly, or mentioning the client)
+    if (!helpers.isCommand(message, client)) {
         return;
     }
 
-    helpers.log(`[${message.guild.id}] ${message.author.tag}: ${message.content}}`);
+    helpers.log(`[${message.guild.id}] ${message.author.tag}: ${message.content}`);
 
-    if (!helpers.checkPermissions(message) && helpers.getUserSetting(message.author.id, 'permissionChecker') !== 0) {
-        try {
-            restricted.run(message, client);
-        } catch (err) {
-            helpers.logError("restricted permissions", err);
-        }
-        return;
-    } else if (!helpers.checkPermissions(message)) {
-        return;
-    }
-
-    if (!guildSettings.calendarID || !guildSettings.timezone) {
+    if (!helpers.isGuildInited(guildSettings)) {
         try {
             init.run(message, client);
         } catch (err) {
             helpers.logError(`running init messages in guild: ${message.guild.id}`, err);
-            return message.channel.send("something went wrong");
+            message.channel.send("something went wrong");
         }
-    } else {
-        try {
-            commands.run(message, client);
-        } catch (err) {
-            helpers.logError(`running main message handler in guild: ${message.guild.id}`, err);
-            return message.channel.send("something went wrong");
-        }
+        return;
+    }
+
+    try {
+        commands.run(message, client);
+    } catch (err) {
+        helpers.logError(`running main message handler in guild: ${message.guild.id}`, err);
+        message.channel.send("something went wrong");
     }
 });
 
