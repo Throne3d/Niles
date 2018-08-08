@@ -290,7 +290,7 @@ function checkPermissionsManual(message, cmd) {
     let missingPermissionsString = missingPermissions.map(x => String(x)).join("\n");
 
     if (missingPermissions !== "") {
-        const promise = message.author.send(`Hey I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**:\n`
+        const promise = message.author.send(`Hey, I noticed you tried to use the command \`${cmd}\`. I am missing the following permissions in channel **${message.channel.name}**:\n`
           + "```\n"
           + missingPermissionsString + "\n"
           + "```\n"
@@ -314,7 +314,7 @@ function yesThenCollector(message) {
     });
     collector.on("end", (collected, reason) => {
         if (reason === "time") {
-            return message.channel.send("Command response timeout");
+            message.channel.send("Command response timeout");
         }
     });
     return p.promise;

@@ -1,4 +1,3 @@
-const path = require("path");
 const defer = require("promise-defer");
 const CalendarAPI = require("node-google-calendar");
 const columnify = require("columnify");
