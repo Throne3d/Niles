@@ -14,10 +14,7 @@ let guilds = require("./guilds.js");
 let cal = new CalendarAPI(settings.calendarConfig);
 let autoUpdater = [];
 let timerCount = [];
-const NO_CALENDAR_MESSAGE = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar, run `!setup` to make sure you followed Step 1.\n\
-You should also check that you have entered the correct calendar id using `!id`.\n\
-\nIf you are still getting this error join the Discord support server here: https://discord.gg/jNyntBn";
-const { USAGE } = require("./strings");
+const { USAGE, WARNING_NO_CALENDAR } = require("./strings");
 
 //functions
 
@@ -157,7 +154,7 @@ function getEvents(message, calendarID, dayMap) {
         // Catching periodic google rejections:
         if (err.message.includes("Invalid Credentials")) return;
 
-        if (err.message.includes("notFound")) message.channel.send(NO_CALENDAR_MESSAGE);
+        if (err.message.includes("notFound")) message.channel.send(WARNING_NO_CALENDAR);
 
         clearInterval(autoUpdater[message.guild.id]);
     });

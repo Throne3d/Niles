@@ -1,6 +1,7 @@
 const website = null; // "http://niles.seanecoffey.com/"
 const websiteSetup = null; // "http://niles.seanecoffey.com/setup"
 const account = null; // "niles-291@niles-169605.iam.gserviceaccount.com"
+const discordServer = null; // "https://discord.gg/jNyntBn"
 const botName = "the bot";
 
 const USAGE = "```\
@@ -40,8 +41,14 @@ Hi! Let's get me setup for use in this Discord. The steps are outlined below" + 
 \n\
 I should now be able to sync with your Google calendar and interact with on you on Discord. Try `!display` to get started!";
 
+const WARNING_NO_CALENDAR = "I can't seem to find your calendar! This is usually because you haven't invited Niles to access your calendar. Run `!setup` and make sure you've followed step 1.\n\
+You should also check that you have entered the correct calendar ID, using `!id`.\n\
+\n\
+If you still get this error, join the Discord support server" + (discordServer ? ` here: <${discordServer}>` : "") + ".";
+
 module.exports = {
     USAGE,
     USAGE_SETUP,
     NOTIFICATION_SETUP,
+    WARNING_NO_CALENDAR,
 };
