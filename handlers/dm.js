@@ -1,8 +1,8 @@
 const helpers = require("./helpers");
 const { USAGE } = require("./strings");
 
-// FIXME: include DM commands specifically
-
+// disable or enable DMs about missing permissions
+// TODO: check this works?
 function permissions(message, args) {
     if (args.length !== 1) {
         return message.author.send("This command accepts exactly one argument. For example, use `!permissions 0`.");
@@ -18,6 +18,7 @@ function permissions(message, args) {
     return message.author.send(`Okay, I've now set permissions to ${arg}.`);
 }
 
+// send a usage message
 function help(message, args) {
     if (args.length > 0) message.author.send("This command doesn't take an argument.");
     message.author.send(USAGE);

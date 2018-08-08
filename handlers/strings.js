@@ -19,6 +19,11 @@ Usage\n\
 !tz                  -  Set the timezone for the guild\n\
 !prefix              -  View or change the prefix for " + botName + "\n\
 !help                -  Display this message\n\
+---------------------------\n\
+DM commands:\n\
+!permissions <0/1>   - Disable or re-enable DMs about missing channel permissions\n\
+!help                - Display this message\n\
+\n\
 ```" + (website ? `\nVisit ${website} for more info.` : "");
 
 const USAGE_SETUP = "```\
