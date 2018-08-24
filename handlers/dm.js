@@ -8,7 +8,7 @@ function permissions(message, args) {
         return message.author.send("This command accepts exactly one argument. For example, use `!permissions 0`.");
     }
 
-    const arg = parseInt(arg[0], 10);
+    const arg = parseInt(args[0], 10);
     if (!Number.isInteger(arg) || ![0, 1].includes(arg)) {
         return message.author.send("You must use an argument of either 0 or 1.");
     }
