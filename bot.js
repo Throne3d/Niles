@@ -25,7 +25,6 @@ client.on("ready", () => {
     });
 });
 
-// FIXME: what about guilds that exist prior to the bot being loaded? (or while the bot is offline?)
 client.on("guildCreate", (guild) => {
     helpers.debug("guildCreate:", guild);
     guilds.create(guild);

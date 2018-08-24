@@ -15,8 +15,6 @@ let autoUpdater = [];
 let timerCount = [];
 const { USAGE, WARNING_NO_CALENDAR } = require("./strings");
 
-//functions
-
 function clean(channel, numberMessages, recurse) {
     let calendarPath = helpers.pathForSpecificGuild(channel.guild.id, "calendar");
     let calendar = helpers.readFile(calendarPath);
